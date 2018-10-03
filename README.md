@@ -30,6 +30,7 @@ Dependency | Purpose
 @babel/preset-env | Add support for next generation of javascript
 @babel/preset-typescript | Add Typescript support
 babel-loader | Use Babel with Webpack
+babel-plugin-transform-class-properties | Add support for class properties
 clean-webpack-plugin | Clear dist folder on build
 copy-webpack-plugin | Copy certain files on build
 friendly-errors-webpack-plugin | Get improved error reporting in terminal

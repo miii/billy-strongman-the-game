@@ -7,14 +7,14 @@ export const phaserConfig: GameConfig = {
   parent: 'app',
   type: Phaser.AUTO,
   scene: [GameScene],
-  width: 1024,
-  height: 576,
+  width: 320,
+  height: 320,
 
   // Sample config items
   physics: {
     default: 'arcade',
     arcade: {
-      gravity: { y: 300 }
+      // debug: true,
     }
   },
 };

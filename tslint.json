@@ -14,6 +14,8 @@
     "no-boolean-literal-compare": true,
     "import-name": false,
     "trailing-comma": false,
-    "curly": false
+    "curly": false,
+    "brace-style": false,
+    "no-increment-decrement": false
   }
 }

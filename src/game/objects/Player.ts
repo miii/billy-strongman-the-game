@@ -1,6 +1,16 @@
 import { ImageObject } from './base-classes/ImageObject';
 
+/**
+ * Player object
+ * @extends {ImageObject}
+ */
 export class Player extends ImageObject {
+  /**
+   * Object assets key
+   * @type {string}
+   */
+  protected static key: string = 'player';
+
   /**
    * Timestamp of next allowed move
    * @type {number}
@@ -28,7 +38,7 @@ export class Player extends ImageObject {
    * @return {void}
    */
   public update(time: number): void {
-    // this.move(time);
+    this.move(time);
   }
 
   /**
@@ -51,6 +61,7 @@ export class Player extends ImageObject {
     // Next move can be done in 50 ms
     this.nextMoveTime = time + 50;
 
+    // Check cursor keys and move player
     if (this.cursors.up.isDown)
       this.setVelocityY(-velocity);
     else if (this.cursors.right.isDown)
@@ -59,10 +70,5 @@ export class Player extends ImageObject {
       this.setVelocityY(velocity);
     else if (this.cursors.left.isDown)
       this.setVelocityX(-velocity);
-
-    // Get tile at player position
-    /*
-    console.log(this.ground.getTileAtWorldXY(this.player.getCenter().x, this.player.getCenter().y));
-    */
   }
 }

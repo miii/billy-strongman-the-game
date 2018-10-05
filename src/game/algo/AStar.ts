@@ -54,8 +54,9 @@ export class AStar {
       return console.error('No to object given');
 
     // Dummy code
-    const fromNode = this.createPathNode(this.fromObject.x, this.fromObject.y, 0, null);
-    console.log(fromNode);
+    let pathNode: PathNode;
+    pathNode = this.pathTraverser();
+
   }
 
   /**
@@ -77,5 +78,121 @@ export class AStar {
 
     // Create new path node
     return new PathNode(tile, index, cost, prevNode);
+  }
+
+  private pathTraverser() {
+    const closedArray: PathNode[] = [];
+    const openArray: PathNode[] = [];
+    const playerPos = [this.fromObject.x, this.fromObject.y];
+    const goalPosition = [this.toObject.x, this.toObject.y];
+
+    const playerPositionCost = this.countCost(
+        this.tilemap.getTileAtWorldXY(playerPos[0], playerPos[1]),
+        this.tilemap.getTileAtWorldXY(goalPosition[0], goalPosition[1]));
+
+    let currentNode = this.createPathNode(
+      this.fromObject.x, this.fromObject.y, playerPositionCost, null
+    );
+    console.log('Closed Array', closedArray);
+    openArray.push(currentNode);
+    do {
+      if (!this.tilemap.getTileAtWorldXY(this.toObject.x, this.toObject.y))
+        break;
+      if (currentNode.cost === 0) {
+        console.log('Found the node', currentNode);
+        break;
+      }
+      closedArray.push(currentNode);
+      openArray.splice(closedArray.findIndex(node => node === currentNode), 1);
+      const neighbourNodes: PathNode[] = this.checkNeighbours(currentNode);
+      neighbourNodes.forEach((neighbourNode) => {
+        if (!closedArray.some(closedNode => closedNode.tile === neighbourNode.tile)) {
+          openArray.push(neighbourNode);
+        }
+      });
+      let minNode: PathNode | undefined;
+      openArray.forEach((arrayNode) => {
+        if (minNode !== undefined)
+          minNode = arrayNode;
+        else if (minNode.cost > arrayNode.cost)
+          minNode = arrayNode;
+      });
+      if (minNode !== undefined)
+        currentNode = minNode;
+      console.log('Open array, ', openArray);
+    } while (openArray.length > 0);
+
+    return currentNode;
+  }
+
+  private countCost(tile1: Phaser.Tilemaps.Tile, tile2: Phaser.Tilemaps.Tile) {
+    const currentTile = tile1;
+    const goalTilePosition = tile2;
+
+    const optimalCost = Math.abs(goalTilePosition.x - currentTile.x)
+						          + Math.abs(goalTilePosition.y - currentTile.y);
+
+    return optimalCost;
+  }
+
+  private checkNeighbours(currentNode: PathNode): PathNode[] {
+
+    const goalPosition = [this.toObject.x, this.toObject.y];
+    let movementCost: number;
+    const neighbourNodes: PathNode[] = [];
+
+    const upNeighbourTile = this.tilemap
+      .getTileAtWorldXY(currentNode.tile.pixelX, currentNode.tile.pixelY - 32);
+    const rightNeighbourTile = this.tilemap
+      .getTileAtWorldXY(currentNode.tile.pixelX + 32, currentNode.tile.pixelY);
+    const downNeighbourTile = this.tilemap
+      .getTileAtWorldXY(currentNode.tile.pixelX, currentNode.tile.pixelY + 32);
+    const leftNeighbourTile = this.tilemap
+      .getTileAtWorldXY(currentNode.tile.pixelX - 32, currentNode.tile.pixelY);
+
+    if (upNeighbourTile) {
+      movementCost = this.countCost(
+        upNeighbourTile,
+        this.tilemap.getTileAtWorldXY(goalPosition[0], goalPosition[1])
+      );
+      const upNeighbour = this.createPathNode(
+        currentNode.tile.pixelX, currentNode.tile.pixelY - 32, movementCost, currentNode
+      );
+      neighbourNodes.push(upNeighbour);
+    }
+
+    if (rightNeighbourTile) {
+      movementCost = this.countCost(
+        rightNeighbourTile,
+        this.tilemap.getTileAtWorldXY(goalPosition[0], goalPosition[1])
+      );
+      const rightNeighbour = this.createPathNode(
+        currentNode.tile.pixelX + 32, currentNode.tile.pixelY, movementCost, currentNode
+      );
+      neighbourNodes.push(rightNeighbour);
+    }
+
+    if (downNeighbourTile) {
+      movementCost = this.countCost(
+        downNeighbourTile,
+        this.tilemap.getTileAtWorldXY(goalPosition[0], goalPosition[1])
+      );
+      const downNeighbour = this.createPathNode(
+        currentNode.tile.pixelX, currentNode.tile.pixelY + 32, movementCost, currentNode
+      );
+      neighbourNodes.push(downNeighbour);
+    }
+
+    if (leftNeighbourTile) {
+      movementCost = this.countCost(
+        leftNeighbourTile,
+        this.tilemap.getTileAtWorldXY(goalPosition[0], goalPosition[1])
+      );
+      const leftNeighbour = this.createPathNode(
+        currentNode.tile.pixelX - 32, currentNode.tile.pixelY, movementCost, currentNode
+      );
+      neighbourNodes.push(leftNeighbour);
+    }
+    return neighbourNodes;
   }
 }

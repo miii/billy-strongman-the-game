@@ -1,7 +1,6 @@
 import { Player } from '@/objects/Player';
 import { DebugBlock } from '@/objects/DebugBlock';
 import { AStar } from '@/algo/AStar';
-import { PathNode } from '@/algo/PathNode';
 
 /**
  * Sample Phaser scene
@@ -13,12 +12,6 @@ export class GameScene extends Phaser.Scene {
    * @type {Player}
    */
   private player!: Player;
-
-  /**
-   * Player check block image
-   * @type {Phaser.Physics.Arcade.Image}
-   */
-  private debugBlock!: Phaser.Physics.Arcade.Image;
 
   /**
    * Tilemap ground layer
@@ -37,6 +30,9 @@ export class GameScene extends Phaser.Scene {
 
     this.load.image('tilesgrid', 'assets/tilesgrid.png');
     this.load.tilemapTiledJSON('map', 'assets/tilesgridmap.json');
+
+    // Set debugger scene
+    DebugBlock.scene = this;
   }
 
   /**
@@ -52,25 +48,11 @@ export class GameScene extends Phaser.Scene {
     this.ground = map.createStaticLayer('ground', tiles, 0, 0);
 
     // Create player
-    this.player = new Player({
-      scene: this,
-      key: 'player',
-      x: 32,
-      y: 32
-    });
+    this.createPlayer(map);
 
-    // Create player
-    this.debugBlock = new DebugBlock({
-      scene: this,
-      key: 'debug',
-      x: 32,
-      y: 48
-    });
-
-    // Create player
+    // Create goal
     const goal = new Player({
       scene: this,
-      key: 'player',
       x: 96,
       y: 128
     });
@@ -88,6 +70,40 @@ export class GameScene extends Phaser.Scene {
   }
 
   /**
+   * Create player in scene
+   * @return {void}
+   */
+  private createPlayer(map: Phaser.Tilemaps.Tilemap): void {
+    // Get player object layer from tilemap
+    const tilemapPlayerObjectGroup = map.objects
+      .find((object) => {
+        return object.name === 'player';
+      });
+
+    // Make sure object layer exists
+    if (tilemapPlayerObjectGroup === undefined)
+      return console.error('No player was found in tilemap');
+
+    // Get player object from layer
+    const tilemapPlayerObject = tilemapPlayerObjectGroup.objects[0];
+
+    // Create player
+    this.player = new Player({
+      scene: this,
+
+      // Object x offset
+      // @ts-ignore
+      x: tilemapPlayerObject.x,
+
+      // Object y offset
+      // For some reason, the origin is placed in the bottom
+      // left corner, hence the 32 pixel negative offset
+      // @ts-ignore
+      y: tilemapPlayerObject.y - 32
+    });
+  }
+
+  /**
    * Phaser update method
    * Called on every frame
    * @param {number} time Time since scene started
@@ -95,7 +111,5 @@ export class GameScene extends Phaser.Scene {
    */
   public update(time: number): void {
     this.player.update(time);
-    this.debugBlock.update(time);
-    // this.move(time);
   }
 }

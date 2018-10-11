@@ -4,6 +4,11 @@ import { Player } from './Player';
 import { AStar } from '@/algo/AStar';
 import { Bottleneck } from '@/algo/Bottleneck';
 
+export interface ClosestOpponent {
+  distance: number;
+  opponent: Opponent;
+}
+
 /**
  * Opponent object
  * @extends {ImageObject}
@@ -35,30 +40,31 @@ export class Opponent extends ImageObject implements PlayerListener {
    * @return {void}
    */
   public onPlayerMove(player: Player): void {
+    const closestOpponent = this.closestOpponent(player);
+
     // If opponent is the closest one to the player
-    if (this.isClosestOpponent(player)) {
+    if (this === closestOpponent.opponent) {
       // Find closest path to player
       const path = AStar.getPath(this, player);
 
       // Move opponent to tile
       this.moveToTile(path[0].tile);
 
+      AStar.getPath(this, player, true);
+
     // If opponent is not the closest one to the player
     } else {
-      // TODO: Implement bottleneck mode
+      Bottleneck.find(this, player);
     }
   }
 
   /**
-   * Check if opponent is the closest one to the player
+   * Get closest opponent to the player
    * @param {Player} player Player instance
    * @return {boolean}
    */
-  private isClosestOpponent(player: Player): boolean {
-    let closest: {
-      distance: number,
-      opponent: Opponent
-    };
+  private closestOpponent(player: Player): ClosestOpponent {
+    let closest: ClosestOpponent;
 
     // Check manhattan distance for each player
     Opponent.allies.forEach((opponent) => {
@@ -73,7 +79,7 @@ export class Opponent extends ImageObject implements PlayerListener {
     });
 
     // @ts-ignore
-    return this === closest.opponent;
+    return closest;
   }
 
   /**

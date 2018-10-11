@@ -13,12 +13,12 @@
  </tile>
  <tile id="2">
   <properties>
-   <property name="collides" type="bool" value="false"/>
+   <property name="player" type="bool" value="true"/>
   </properties>
  </tile>
  <tile id="3">
   <properties>
-   <property name="collides" type="bool" value="true"/>
+   <property name="opponent" type="bool" value="true"/>
   </properties>
  </tile>
 </tileset>

@@ -34,6 +34,6 @@ export class DebugBlock extends ImageObject {
    */
   public create(): void {
     // Set block opacity
-    this.alpha = 0.3;
+    this.alpha = 0.1;
   }
 }

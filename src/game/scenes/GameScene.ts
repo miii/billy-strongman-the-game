@@ -53,61 +53,15 @@ export class GameScene extends Phaser.Scene {
     // Create player
     this.createPlayer(map);
 
+    // Create opponents
+    this.createOpponents(map);
+
     // Prevent player from walking on water
     water.setCollisionByProperty({ collides: true });
     this.physics.add.collider(this.player, water);
 
     AStar.tilemap = this.ground;
-
-    // Add opponents
-    const cpu1 = new Opponent({
-      scene: this,
-      x: 32,
-      y: 192
-    }).setTilemap<Opponent>(this.ground);
-
-    const cpu2 = new Opponent({
-      scene: this,
-      x: 224,
-      y: 128
-    }).setTilemap<Opponent>(this.ground);
-
-    this.player.addMoveListener(cpu1);
-    this.player.addMoveListener(cpu2);
-  }
-
-  /**
-   * Create player in scene
-   * @return {void}
-   */
-  private createPlayer(map: Phaser.Tilemaps.Tilemap): void {
-    // Get player object layer from tilemap
-    const tilemapPlayerObjectGroup = map.objects
-      .find((object) => {
-        return object.name === 'player';
-      });
-
-    // Make sure object layer exists
-    if (tilemapPlayerObjectGroup === undefined)
-      return console.error('No player was found in tilemap');
-
-    // Get player object from layer
-    const tilemapPlayerObject = tilemapPlayerObjectGroup.objects[0];
-
-    // Create player
-    this.player = new Player({
-      scene: this,
-
-      // Object x offset
-      // @ts-ignore
-      x: tilemapPlayerObject.x,
-
-      // Object y offset
-      // For some reason, the origin is placed in the bottom
-      // left corner, hence the 32 pixel negative offset
-      // @ts-ignore
-      y: tilemapPlayerObject.y - 32
-    }).setTilemap(this.ground);
+    Bottleneck.tilemap = this.ground;
   }
 
   /**
@@ -118,5 +72,76 @@ export class GameScene extends Phaser.Scene {
    */
   public update(time: number): void {
     this.player.update(time);
+  }
+
+  /**
+   * Create player in scene
+   * @return {void}
+   */
+  private createPlayer(map: Phaser.Tilemaps.Tilemap): void {
+    // Get player object layer from tilemap
+    const charactersLayer = map.layers
+      .find(layer => layer.name === 'characters') as Phaser.Tilemaps.LayerData;
+
+    // Find player tile
+    // @ts-ignore
+    let playerTile: Phaser.Tilemaps.Tile = undefined;
+    charactersLayer.data.forEach((row: Phaser.Tilemaps.Tile[]) => {
+      row.some((tile) => {
+        const player = tile.properties.hasOwnProperty('player');
+        if (player)
+          playerTile = tile;
+
+        return player;
+      });
+    });
+
+    // Avoid errors
+    if (playerTile === undefined)
+      throw new Error('Player not found in tilemap');
+
+    // Create player
+    this.player = new Player({
+      scene: this,
+      x: playerTile.pixelX,
+      y: playerTile.pixelY
+    }).setTilemap(this.ground);
+  }
+
+  /**
+   * Create player in scene
+   * @return {void}
+   */
+  private createOpponents(map: Phaser.Tilemaps.Tilemap): void {
+    // Get player object layer from tilemap
+    const charactersLayer = map.layers
+      .find(layer => layer.name === 'characters') as Phaser.Tilemaps.LayerData;
+
+    // Find opponent tiles
+    const opponentTiles: Phaser.Tilemaps.Tile[] = [];
+    charactersLayer.data.forEach((row: Phaser.Tilemaps.Tile[]) => {
+      row.forEach((tile) => {
+        const opponent = tile.properties.hasOwnProperty('opponent');
+        if (opponent)
+          opponentTiles.push(tile);
+      });
+    });
+
+    // Avoid errors
+    if (opponentTiles.length === 0)
+      throw new Error('No opponent found in tilemap');
+
+    // Add opponents
+    opponentTiles.forEach((opponentTile) => {
+      // Create opponent
+      const cpu = new Opponent({
+        scene: this,
+        x: opponentTile.pixelX,
+        y: opponentTile.pixelY
+      }).setTilemap<Opponent>(this.ground);
+
+      // Listen to player moves
+      this.player.addMoveListener(cpu);
+    });
   }
 }

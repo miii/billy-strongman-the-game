@@ -101,11 +101,13 @@ export class Player extends ImageObject {
       y: 128
     });
 
-    AStar
+    const nodes = AStar
       .create(this.scene, this.tilemap)
       .from(this)
       .to(goal)
-      .navigate();
+      .getPath();
+
+    console.log(nodes);
 
     return true;
   }

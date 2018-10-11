@@ -1,5 +1,6 @@
 import { ImageObject } from '@/objects/base-classes/ImageObject';
 import { PathNode } from '@/algo/PathNode';
+import { DebugBlock } from '@/objects/DebugBlock';
 
 export class AStar {
   /**
@@ -9,12 +10,23 @@ export class AStar {
   public static tilemap: Phaser.Tilemaps.StaticTilemapLayer;
 
   /**
+   * List of debug blocks
+   * @type {ImageObject[]}
+   */
+  public static debugBlocks: ImageObject[] = [];
+
+  /**
    * Find the most efficient way from point A to B
    * @param {ImageObject} fromObject From object
    * @param {ImageObject} toObject To object
+   * @param {boolean} debug Render debug tiles (default: false)
    * @return {PathNode[]} Array containing the pathNodes to the player
    */
-  public static getPath(fromObject: ImageObject, toObject: ImageObject): PathNode[] {
+  public static getPath(
+    fromObject: ImageObject,
+    toObject: ImageObject,
+    debug: boolean = false
+  ): PathNode[] {
     // Get original cost
     const playerPositionCost = AStar.countCost(
       AStar.tilemap.getTileAtWorldXY(fromObject.x, fromObject.y),
@@ -70,11 +82,21 @@ export class AStar {
 
     } while (openArray.length > 0);
 
+    // Clear debug blocks
+    if (debug) {
+      AStar.debugBlocks.forEach(block => block.destroy());
+      AStar.debugBlocks = [];
+    }
+
     // Traverse backwards through node tree to get corrent order
     const correctPath: PathNode[] = [];
     while (currentNode.prevNode !== null) {
       correctPath.unshift(currentNode);
       currentNode = currentNode.prevNode;
+
+      // Add debug block
+      if (debug)
+        AStar.debugBlocks.push(DebugBlock.create(currentNode.tile.pixelX, currentNode.tile.pixelY));
     }
 
     // Return nodes in ascending order

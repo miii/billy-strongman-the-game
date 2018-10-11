@@ -2,6 +2,7 @@ import { ImageObject } from './base-classes/ImageObject';
 import { PlayerListener } from './base-classes/PlayerListener';
 import { Player } from './Player';
 import { AStar } from '@/algo/AStar';
+import { Bottleneck } from '@/algo/Bottleneck';
 
 /**
  * Opponent object
@@ -34,9 +35,15 @@ export class Opponent extends ImageObject implements PlayerListener {
    * @return {void}
    */
   public onPlayerMove(player: Player): void {
-    // Check if opponent is the closest one to the player
+    // If opponent is the closest one to the player
     if (this.isClosestOpponent(player)) {
-      // TODO: Implement follow mode
+      // Find closest path to player
+      const path = AStar.getPath(this, player);
+
+      // Move opponent to tile
+      this.moveToTile(path[0].tile);
+
+    // If opponent is not the closest one to the player
     } else {
       // TODO: Implement bottleneck mode
     }
@@ -45,6 +52,7 @@ export class Opponent extends ImageObject implements PlayerListener {
   /**
    * Check if opponent is the closest one to the player
    * @param {Player} player Player instance
+   * @return {boolean}
    */
   private isClosestOpponent(player: Player): boolean {
     let closest: {
@@ -54,9 +62,7 @@ export class Opponent extends ImageObject implements PlayerListener {
 
     // Check manhattan distance for each player
     Opponent.allies.forEach((opponent) => {
-      const distance = AStar
-        .getPath(this, player)
-        .length;
+      const distance = AStar.getPath(opponent, player).length;
 
       // Set new closest opponent
       if (!closest || closest.distance > distance)
@@ -68,5 +74,15 @@ export class Opponent extends ImageObject implements PlayerListener {
 
     // @ts-ignore
     return this === closest.opponent;
+  }
+
+  /**
+   * Move opponent to tile
+   * @param {Phaser.Tilemaps.Tile} tile Destination
+   * @return {void}
+   */
+  private moveToTile(tile: Phaser.Tilemaps.Tile): void {
+    this.x = tile.pixelX;
+    this.y = tile.pixelY;
   }
 }

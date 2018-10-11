@@ -57,7 +57,6 @@ export class GameScene extends Phaser.Scene {
     water.setCollisionByProperty({ collides: true });
     this.physics.add.collider(this.player, water);
 
-    Bottleneck.setup(this.ground);
     AStar.tilemap = this.ground;
 
     // Add opponents

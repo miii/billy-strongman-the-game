@@ -3,42 +3,16 @@ import { DebugBlock } from '@/objects/DebugBlock';
 
 export class Bottleneck {
   /**
-   * Singleton instance
-   * @type {Bottleneck}
-   */
-  private static instance: Bottleneck;
-
-  /**
    * Scene tilemap
    * @type {Phaser.Tilemaps.StaticTilemapLayer}
    */
-  private tilemap!: Phaser.Tilemaps.StaticTilemapLayer;
+  public static tilemap: Phaser.Tilemaps.StaticTilemapLayer;
 
   /**
    * Store debug blocks
    * @type {DebugBlock[]}
    */
-  private debugBlocks: DebugBlock[] = [];
-
-  /**
-   * Initialize bottleneck instance
-   * @param {Phaser.Tilemaps.StaticTilemapLayer} tilemap Scene tilemap
-   * @return {Bottleneck}
-   */
-  public static setup(tilemap: Phaser.Tilemaps.StaticTilemapLayer): Bottleneck {
-    Bottleneck.instance = new Bottleneck();
-    Bottleneck.instance.tilemap = tilemap;
-
-    return Bottleneck.instance;
-  }
-
-  /**
-   * Get singleton instance
-   * @return {Bottleneck}
-   */
-  public static getInstance(): Bottleneck {
-    return Bottleneck.instance;
-  }
+  private static debugBlocks: DebugBlock[] = [];
 
   /**
    * Find bottleneck tile
@@ -46,7 +20,7 @@ export class Bottleneck {
    * @param {PathNode} cpu2 CPU 2 path node
    * @return {PathNode}
    */
-  public findEndNodes(player: PathNode, cpu2: PathNode): PathNode[] {
+  public static findEndNodes(player: PathNode, cpu2: PathNode): PathNode[] {
     const closed: PathNode[] = [];
     const open: PathNode[] = [];
     const endNodes: PathNode[] = [];
@@ -74,7 +48,7 @@ export class Bottleneck {
       }
 
       // Get new neighbour tiles
-      neighbours = this.getNeighbours(currNode).filter((node) => {
+      neighbours = Bottleneck.getNeighbours(currNode).filter((node) => {
         return  !closed.some(closedNode => closedNode.tile === node.tile) &&
                 !open.some(openNode => openNode.tile === node.tile);
       });
@@ -98,12 +72,12 @@ export class Bottleneck {
     }
 
     // Reset debug blocks
-    this.debugBlocks.forEach(block => block.destroy());
-    this.debugBlocks = [];
+    Bottleneck.debugBlocks.forEach(block => block.destroy());
+    Bottleneck.debugBlocks = [];
 
     // Create debug blocks
     endNodes.forEach((node) => {
-      this.debugBlocks.push(DebugBlock.create(node.tile.pixelX, node.tile.pixelY));
+      Bottleneck.debugBlocks.push(DebugBlock.create(node.tile.pixelX, node.tile.pixelY));
     });
 
     // Return visited nodes
@@ -115,27 +89,27 @@ export class Bottleneck {
    * @param {PathNode} node Parent node
    * @return {PathNode[]}
    */
-  public getNeighbours(node: PathNode): PathNode[] {
+  public static getNeighbours(node: PathNode): PathNode[] {
     const tile = node.tile;
     const neighbours: PathNode[] = [];
 
     // Upper neighbour
-    const upTile = this.tilemap.getTileAtWorldXY(tile.pixelX, tile.pixelY - tile.height);
+    const upTile = Bottleneck.tilemap.getTileAtWorldXY(tile.pixelX, tile.pixelY - tile.height);
     if (upTile)
       neighbours.push(new PathNode(upTile, 0, node));
 
     // Right neighbour
-    const rightTile = this.tilemap.getTileAtWorldXY(tile.pixelX + tile.width, tile.pixelY);
+    const rightTile = Bottleneck.tilemap.getTileAtWorldXY(tile.pixelX + tile.width, tile.pixelY);
     if (rightTile)
       neighbours.push(new PathNode(rightTile, 0, node));
 
     // Down neighbour
-    const downTile = this.tilemap.getTileAtWorldXY(tile.pixelX, tile.pixelY + tile.height);
+    const downTile = Bottleneck.tilemap.getTileAtWorldXY(tile.pixelX, tile.pixelY + tile.height);
     if (downTile)
       neighbours.push(new PathNode(downTile, 0, node));
 
     // Left neighbour
-    const leftTile = this.tilemap.getTileAtWorldXY(tile.pixelX - tile.width, tile.pixelY);
+    const leftTile = Bottleneck.tilemap.getTileAtWorldXY(tile.pixelX - tile.width, tile.pixelY);
     if (leftTile)
       neighbours.push(new PathNode(leftTile, 0, node));
 

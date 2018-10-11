@@ -43,23 +43,6 @@ export class AStar {
   }
 
   /**
-   * Navigate to goal object
-   * @return {void}
-   */
-  public navigate(): void {
-    // Check for errors
-    if (!this.fromObject)
-      return console.error('No from object given');
-    if (!this.toObject)
-      return console.error('No to object given');
-
-    // Dummy code
-    let pathNode: PathNode[];
-    pathNode = this.getPath();
-
-  }
-
-  /**
    * Create new path node by user position
    * @param {number} x Object x position
    * @param {number} y Object y position
@@ -69,18 +52,21 @@ export class AStar {
   private createPathNode(x: number, y: number, cost: number, prevNode: PathNode | null): PathNode {
     const tile = this.tilemap.getTileAtWorldXY(x, y);
 
-    // Calculate subposition index
-    let index = 0;
-    if (x - tile.pixelX > 0)
-      index += 1;
-    if (y - tile.pixelY > 0)
-      index += 2;
-
     // Create new path node
-    return new PathNode(tile, index, cost, prevNode);
+    return new PathNode(tile, cost, prevNode);
   }
 
-  private getPath() {
+  /**
+   * Find the most efficient way from point A to B
+   * @return {PathNode[]} Array containing the pathNodes to the player
+   */
+  public getPath(): PathNode[] {
+    // Check for errors
+    if (!this.fromObject)
+      throw new Error('No from object given');
+    if (!this.toObject)
+      throw new Error('No to object given');
+
     const closedArray: PathNode[] = [];
     const openArray: PathNode[] = [];
     const playerPos = [this.fromObject.x, this.fromObject.y];
@@ -93,10 +79,9 @@ export class AStar {
     let currentNode = this.createPathNode(
       this.fromObject.x, this.fromObject.y, playerPositionCost, null
     );
+
     openArray.push(currentNode);
     do {
-      if (!this.tilemap.getTileAtWorldXY(this.toObject.x, this.toObject.y))
-        break;
       if (currentNode.cost === 0) {
         break;
       }
@@ -130,7 +115,13 @@ export class AStar {
     return correctPath;
   }
 
-  private countCost(tile1: Phaser.Tilemaps.Tile, tile2: Phaser.Tilemaps.Tile) {
+  /**
+   * Count the Manhattan distance between two tiles
+   * @param {Phaser.Tilemaps.Tile} tile1 From tile
+   * @param tile2 To Tile
+   * @return {number} Manhattan distance
+   */
+  private countCost(tile1: Phaser.Tilemaps.Tile, tile2: Phaser.Tilemaps.Tile): number {
     const currentTile = tile1;
     const goalTilePosition = tile2;
 
@@ -204,9 +195,5 @@ export class AStar {
       neighbourNodes.push(leftNeighbour);
     }
     return neighbourNodes;
-  }
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

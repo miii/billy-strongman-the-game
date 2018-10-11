@@ -36,10 +36,8 @@ export class Opponent extends ImageObject implements PlayerListener {
   public onPlayerMove(player: Player): void {
     // Check if opponent is the closest one to the player
     if (this.isClosestOpponent(player)) {
-      console.log(Opponent.allies.findIndex(o => o === this), 'Wow, so close');
       // TODO: Implement follow mode
     } else {
-      console.log(Opponent.allies.findIndex(o => o === this), 'I am the blocker');
       // TODO: Implement bottleneck mode
     }
   }
@@ -57,10 +55,7 @@ export class Opponent extends ImageObject implements PlayerListener {
     // Check manhattan distance for each player
     Opponent.allies.forEach((opponent) => {
       const distance = AStar
-        .create(this.tilemap)
-        .from(opponent)
-        .to(player)
-        .getPath()
+        .getPath(this, player)
         .length;
 
       // Set new closest opponent

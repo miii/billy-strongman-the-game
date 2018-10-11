@@ -1,44 +1,187 @@
 import { ImageObject } from '@/objects/base-classes/ImageObject';
 import { PathNode } from '@/algo/PathNode';
-import { DebugBlock } from '@/objects/DebugBlock';
 
 export class AStar {
-  private tilemap!: Phaser.Tilemaps.StaticTilemapLayer;
-  private fromObject!: ImageObject;
-  private toObject!: ImageObject;
-  private static debugBlock: ImageObject[] = [];
+  /**
+   * Scene AStar.tilemap
+   * @type {Phaser.Tilemaps.StaticTilemapLayer}
+   */
+  public static tilemap: Phaser.Tilemaps.StaticTilemapLayer;
 
-  public constructor(tilemap: Phaser.Tilemaps.StaticTilemapLayer) {
-    this.tilemap = tilemap;
+  /**
+   * Find the most efficient way from point A to B
+   * @param {ImageObject} fromObject From object
+   * @param {ImageObject} toObject To object
+   * @return {PathNode[]} Array containing the pathNodes to the player
+   */
+  public static getPath(fromObject: ImageObject, toObject: ImageObject): PathNode[] {
+    // Get original cost
+    const playerPositionCost = AStar.countCost(
+      AStar.tilemap.getTileAtWorldXY(fromObject.x, fromObject.y),
+      AStar.tilemap.getTileAtWorldXY(toObject.x, toObject.y)
+    );
+
+    const closedArray: PathNode[] = [];
+    const openArray: PathNode[] = [];
+    let neighbourNodes: PathNode[];
+
+    // Create PathNode from current tile
+    let currentNode: PathNode | null = AStar.createPathNode(
+      fromObject.x,
+      fromObject.y,
+      playerPositionCost,
+      null
+    );
+    openArray.push(currentNode);
+
+    do {
+      // Break if goal tile is found
+      if (currentNode.cost === 0)
+        break;
+
+      closedArray.push(currentNode);
+      openArray.splice(openArray.findIndex(node => node === currentNode), 1);
+
+      // Get tile neighbours
+      neighbourNodes = AStar.getNeighbours(currentNode, toObject);
+      neighbourNodes.forEach((neighbourNode) => {
+        if (
+          !closedArray.some(closedNode => closedNode.tile === neighbourNode.tile) &&
+          !openArray.some(openNode => openNode.tile === neighbourNode.tile)
+        )
+          openArray.push(neighbourNode);
+      });
+
+      // Save node with smallest cost
+      let minCostNode: PathNode | undefined = undefined;
+
+      openArray.forEach((arrayNode) => {
+        // Add first node
+        if (minCostNode === undefined)
+          minCostNode = arrayNode;
+        // Save new node if cost is smaller
+        else if (minCostNode.cost > arrayNode.cost)
+          minCostNode = arrayNode;
+      });
+
+      // Go to new node with smallest cost
+      if (minCostNode !== undefined)
+        currentNode = minCostNode;
+
+    } while (openArray.length > 0);
+
+    // Traverse backwards through node tree to get corrent order
+    const correctPath: PathNode[] = [];
+    while (currentNode.prevNode !== null) {
+      correctPath.unshift(currentNode);
+      currentNode = currentNode.prevNode;
+    }
+
+    // Return nodes in ascending order
+    return correctPath;
   }
 
   /**
-   * Create new A Star instance
-   * @param {Phaser.Tilemaps.StaticTilemapLayer} tilemap Tilemap
+   * Count the Manhattan distance between two tiles
+   * @param {Phaser.AStar.tilemaps.Tile} tile1 From tile
+   * @param {Phaser.AStar.tilemaps.Tile} tile2 To Tile
+   * @return {number} Manhattan distance
    */
-  public static create(tilemap: Phaser.Tilemaps.StaticTilemapLayer): AStar {
-    const instance = new this(tilemap);
-    return instance;
+  private static countCost(tile1: Phaser.Tilemaps.Tile, tile2: Phaser.Tilemaps.Tile): number {
+    return Math.abs(tile2.x - tile1.x) + Math.abs(tile2.y - tile1.y);
   }
 
   /**
-   * Set object to start from
-   * @param {ImageObject} obj Starting object
-   * @return {AStar}
+   * Get existing neighbour nodes
+   * @param {PathNode} currentNode Parent node
+   * @param {ImageObject} goalObject Goal object
+   * @return {PathNode[]}
    */
-  public from(obj: ImageObject): AStar {
-    this.fromObject = obj;
-    return this;
-  }
+  private static getNeighbours(currentNode: PathNode, goalObject: ImageObject): PathNode[] {
+    const currentTile = currentNode.tile;
+    const neighbourNodes: PathNode[] = [];
+    let movementCost: number;
 
-  /**
-   * Set object to walk to
-   * @param {ImageObject} obj Goal object
-   * @return {AStar}
-   */
-  public to(obj: ImageObject): AStar {
-    this.toObject = obj;
-    return this;
+    // Get tile objects from AStar.tilemap (null if invalid)
+    const upNeighbourTile = AStar.tilemap
+      .getTileAtWorldXY(currentTile.pixelX, currentTile.pixelY - 32);
+    const rightNeighbourTile = AStar.tilemap
+      .getTileAtWorldXY(currentTile.pixelX + 32, currentTile.pixelY);
+    const downNeighbourTile = AStar.tilemap
+      .getTileAtWorldXY(currentTile.pixelX, currentTile.pixelY + 32);
+    const leftNeighbourTile = AStar.tilemap
+      .getTileAtWorldXY(currentTile.pixelX - 32, currentTile.pixelY);
+
+    // Upper neighbour
+    if (upNeighbourTile) {
+      // Get cost to goal tile
+      movementCost = AStar.countCost(
+        upNeighbourTile,
+        AStar.tilemap.getTileAtWorldXY(goalObject.x, goalObject.y)
+      );
+      // Push neighbour to list
+      const upNeighbour = AStar.createPathNode(
+        currentNode.tile.pixelX,
+        currentNode.tile.pixelY - 32,
+        movementCost,
+        currentNode
+      );
+      neighbourNodes.push(upNeighbour);
+    }
+
+    // Right neighbour
+    if (rightNeighbourTile) {
+      // Get cost to goal tile
+      movementCost = AStar.countCost(
+        rightNeighbourTile,
+        AStar.tilemap.getTileAtWorldXY(goalObject.x, goalObject.y)
+      );
+      // Push neighbour to list
+      const rightNeighbour = AStar.createPathNode(
+        currentNode.tile.pixelX + 32,
+        currentNode.tile.pixelY,
+        movementCost,
+        currentNode
+      );
+      neighbourNodes.push(rightNeighbour);
+    }
+
+    // Down neighbour
+    if (downNeighbourTile) {
+      // Get cost to goal tile
+      movementCost = AStar.countCost(
+        downNeighbourTile,
+        AStar.tilemap.getTileAtWorldXY(goalObject.x, goalObject.y)
+      );
+      // Push neighbour to list
+      const downNeighbour = AStar.createPathNode(
+        currentNode.tile.pixelX,
+        currentNode.tile.pixelY + 32,
+        movementCost,
+        currentNode
+      );
+      neighbourNodes.push(downNeighbour);
+    }
+
+    // Left neighbour
+    if (leftNeighbourTile) {
+      // Get cost to goal tile
+      movementCost = AStar.countCost(
+        leftNeighbourTile,
+        AStar.tilemap.getTileAtWorldXY(goalObject.x, goalObject.y)
+      );
+      // Push neighbour to list
+      const leftNeighbour = AStar.createPathNode(
+        currentNode.tile.pixelX - 32,
+        currentNode.tile.pixelY,
+        movementCost,
+        currentNode
+      );
+      neighbourNodes.push(leftNeighbour);
+    }
+
+    // Return list of valid neighbours
+    return neighbourNodes;
   }
 
   /**
@@ -48,154 +191,15 @@ export class AStar {
    * @param {number} cost Node path cost
    * @param {PathNode | null} prevNode Previous path node
    */
-  private createPathNode(x: number, y: number, cost: number, prevNode: PathNode | null): PathNode {
-    const tile = this.tilemap.getTileAtWorldXY(x, y);
+  private static createPathNode(
+    x: number,
+    y: number,
+    cost: number,
+    prevNode: PathNode | null
+  ): PathNode {
+    const tile = AStar.tilemap.getTileAtWorldXY(x, y);
 
     // Create new path node
     return new PathNode(tile, cost, prevNode);
-  }
-
-  /**
-   * Find the most efficient way from point A to B
-   * @return {PathNode[]} Array containing the pathNodes to the player
-   */
-  public getPath(): PathNode[] {
-    // Check for errors
-    if (!this.fromObject)
-      throw new Error('No from object given');
-    if (!this.toObject)
-      throw new Error('No to object given');
-
-    const closedArray: PathNode[] = [];
-    const openArray: PathNode[] = [];
-    const playerPos = [this.fromObject.x, this.fromObject.y];
-    const goalPosition = [this.toObject.x, this.toObject.y];
-
-    const playerPositionCost = this.countCost(
-        this.tilemap.getTileAtWorldXY(playerPos[0], playerPos[1]),
-        this.tilemap.getTileAtWorldXY(goalPosition[0], goalPosition[1]));
-
-    console.log('Player pos cost ', playerPositionCost);
-    let currentNode: PathNode | null = this.createPathNode(
-      this.fromObject.x, this.fromObject.y, playerPositionCost, null
-    );
-
-    openArray.push(currentNode);
-    do {
-      if (currentNode.cost === 0) {
-        break;
-      }
-      closedArray.push(currentNode);
-      openArray.splice(openArray.findIndex(node => node === currentNode), 1);
-      const neighbourNodes: PathNode[] = this.getNeighbours(currentNode);
-      neighbourNodes.forEach((neighbourNode) => {
-        if (!closedArray.some(closedNode => closedNode.tile === neighbourNode.tile &&
-            !openArray.some(openNode => openNode.tile === neighbourNode.tile))) {
-          openArray.push(neighbourNode);
-        }
-      });
-      let minCostNode: PathNode | undefined = undefined;
-      openArray.forEach((arrayNode) => {
-        if (minCostNode === undefined)
-          minCostNode = arrayNode;
-        else if (minCostNode.cost > arrayNode.cost)
-          minCostNode = arrayNode;
-      });
-      if (minCostNode !== undefined)
-        currentNode = minCostNode;
-    } while (openArray.length > 0);
-
-    const correctPath: PathNode[] = [];
-    AStar.debugBlock.forEach(block => block.destroy());
-    AStar.debugBlock = [];
-    while (currentNode.prevNode !== null) {
-      correctPath.unshift(currentNode);
-      AStar.debugBlock.push(DebugBlock.create(currentNode.tile.pixelX, currentNode.tile.pixelY));
-      currentNode = currentNode.prevNode;
-    }
-
-    return correctPath;
-  }
-
-  /**
-   * Count the Manhattan distance between two tiles
-   * @param {Phaser.Tilemaps.Tile} tile1 From tile
-   * @param tile2 To Tile
-   * @return {number} Manhattan distance
-   */
-  private countCost(tile1: Phaser.Tilemaps.Tile, tile2: Phaser.Tilemaps.Tile): number {
-    const currentTile = tile1;
-    const goalTilePosition = tile2;
-
-    const optimalCost = Math.abs(goalTilePosition.x - currentTile.x)
-						          + Math.abs(goalTilePosition.y - currentTile.y);
-
-    return optimalCost;
-  }
-
-  /**
-   * Get existing neighbour nodes
-   * @param {PathNode} currentNode Parent node
-   * @return {PathNode[]}
-   */
-  private getNeighbours(currentNode: PathNode): PathNode[] {
-
-    const goalPosition = [this.toObject.x, this.toObject.y];
-    let movementCost: number;
-    const neighbourNodes: PathNode[] = [];
-
-    const upNeighbourTile = this.tilemap
-      .getTileAtWorldXY(currentNode.tile.pixelX, currentNode.tile.pixelY - 32);
-    const rightNeighbourTile = this.tilemap
-      .getTileAtWorldXY(currentNode.tile.pixelX + 32, currentNode.tile.pixelY);
-    const downNeighbourTile = this.tilemap
-      .getTileAtWorldXY(currentNode.tile.pixelX, currentNode.tile.pixelY + 32);
-    const leftNeighbourTile = this.tilemap
-      .getTileAtWorldXY(currentNode.tile.pixelX - 32, currentNode.tile.pixelY);
-
-    if (upNeighbourTile) {
-      movementCost = this.countCost(
-        upNeighbourTile,
-        this.tilemap.getTileAtWorldXY(goalPosition[0], goalPosition[1])
-      );
-      const upNeighbour = this.createPathNode(
-        currentNode.tile.pixelX, currentNode.tile.pixelY - 32, movementCost, currentNode
-      );
-      neighbourNodes.push(upNeighbour);
-    }
-
-    if (rightNeighbourTile) {
-      movementCost = this.countCost(
-        rightNeighbourTile,
-        this.tilemap.getTileAtWorldXY(goalPosition[0], goalPosition[1])
-      );
-      const rightNeighbour = this.createPathNode(
-        currentNode.tile.pixelX + 32, currentNode.tile.pixelY, movementCost, currentNode
-      );
-      neighbourNodes.push(rightNeighbour);
-    }
-
-    if (downNeighbourTile) {
-      movementCost = this.countCost(
-        downNeighbourTile,
-        this.tilemap.getTileAtWorldXY(goalPosition[0], goalPosition[1])
-      );
-      const downNeighbour = this.createPathNode(
-        currentNode.tile.pixelX, currentNode.tile.pixelY + 32, movementCost, currentNode
-      );
-      neighbourNodes.push(downNeighbour);
-    }
-
-    if (leftNeighbourTile) {
-      movementCost = this.countCost(
-        leftNeighbourTile,
-        this.tilemap.getTileAtWorldXY(goalPosition[0], goalPosition[1])
-      );
-      const leftNeighbour = this.createPathNode(
-        currentNode.tile.pixelX - 32, currentNode.tile.pixelY, movementCost, currentNode
-      );
-      neighbourNodes.push(leftNeighbour);
-    }
-    return neighbourNodes;
   }
 }

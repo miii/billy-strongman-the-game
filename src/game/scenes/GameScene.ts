@@ -58,6 +58,23 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.player, water);
 
     Bottleneck.setup(this.ground);
+    AStar.tilemap = this.ground;
+
+    // Add opponents
+    const cpu1 = new Opponent({
+      scene: this,
+      x: 32,
+      y: 192
+    }).setTilemap<Opponent>(this.ground);
+
+    const cpu2 = new Opponent({
+      scene: this,
+      x: 224,
+      y: 128
+    }).setTilemap<Opponent>(this.ground);
+
+    this.player.addMoveListener(cpu1);
+    this.player.addMoveListener(cpu2);
   }
 
   /**
@@ -92,21 +109,6 @@ export class GameScene extends Phaser.Scene {
       // @ts-ignore
       y: tilemapPlayerObject.y - 32
     }).setTilemap(this.ground);
-
-    const cpu1 = new Opponent({
-      scene: this,
-      x: 32,
-      y: 192
-    }).setTilemap<Opponent>(this.ground);
-
-    const cpu2 = new Opponent({
-      scene: this,
-      x: 224,
-      y: 128
-    }).setTilemap<Opponent>(this.ground);
-
-    this.player.addMoveListener(cpu1);
-    this.player.addMoveListener(cpu2);
   }
 
   /**

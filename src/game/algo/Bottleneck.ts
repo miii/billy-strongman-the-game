@@ -122,22 +122,22 @@ export class Bottleneck {
     // Upper neighbour
     const upTile = this.tilemap.getTileAtWorldXY(tile.pixelX, tile.pixelY - tile.height);
     if (upTile)
-      neighbours.push(new PathNode(upTile, 0, 0, node));
+      neighbours.push(new PathNode(upTile, 0, node));
 
     // Right neighbour
     const rightTile = this.tilemap.getTileAtWorldXY(tile.pixelX + tile.width, tile.pixelY);
     if (rightTile)
-      neighbours.push(new PathNode(rightTile, 0, 0, node));
+      neighbours.push(new PathNode(rightTile, 0, node));
 
     // Down neighbour
     const downTile = this.tilemap.getTileAtWorldXY(tile.pixelX, tile.pixelY + tile.height);
     if (downTile)
-      neighbours.push(new PathNode(downTile, 0, 0, node));
+      neighbours.push(new PathNode(downTile, 0, node));
 
     // Left neighbour
     const leftTile = this.tilemap.getTileAtWorldXY(tile.pixelX - tile.width, tile.pixelY);
     if (leftTile)
-      neighbours.push(new PathNode(leftTile, 0, 0, node));
+      neighbours.push(new PathNode(leftTile, 0, node));
 
     // Return list of neighbours
     return neighbours;

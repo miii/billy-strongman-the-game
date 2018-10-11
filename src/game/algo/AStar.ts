@@ -2,23 +2,20 @@ import { ImageObject } from '@/objects/base-classes/ImageObject';
 import { PathNode } from '@/algo/PathNode';
 
 export class AStar {
-  private scene!: Phaser.Scene;
   private tilemap!: Phaser.Tilemaps.StaticTilemapLayer;
   private fromObject!: ImageObject;
   private toObject!: ImageObject;
 
-  public constructor(scene: Phaser.Scene, tilemap: Phaser.Tilemaps.StaticTilemapLayer) {
-    this.scene = scene;
+  public constructor(tilemap: Phaser.Tilemaps.StaticTilemapLayer) {
     this.tilemap = tilemap;
   }
 
   /**
    * Create new A Star instance
-   * @param {Phaser.Scene} scene Current scene
    * @param {Phaser.Tilemaps.StaticTilemapLayer} tilemap Tilemap
    */
-  public static create(scene: Phaser.Scene, tilemap: Phaser.Tilemaps.StaticTilemapLayer): AStar {
-    const instance = new this(scene, tilemap);
+  public static create(tilemap: Phaser.Tilemaps.StaticTilemapLayer): AStar {
+    const instance = new this(tilemap);
     return instance;
   }
 

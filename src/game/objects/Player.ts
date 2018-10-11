@@ -1,5 +1,5 @@
 import { ImageObject } from './base-classes/ImageObject';
-import { AStar } from '@/algo/AStar';
+import { PlayerListener } from './base-classes/PlayerListener';
 
 /**
  * Player object
@@ -13,12 +13,6 @@ export class Player extends ImageObject {
   protected static key: string = 'player';
 
   /**
-   * Player tilemap
-   * @type {Phaser.Tilemaps.StaticTilemapLayer}
-   */
-  private tilemap!: Phaser.Tilemaps.StaticTilemapLayer;
-
-  /**
    * Timestamp of next allowed move
    * @type {number}
    */
@@ -29,6 +23,12 @@ export class Player extends ImageObject {
    * @type {Phaser.Input.Keyboard.CursorKeys}
    */
   private cursors!: Phaser.Input.Keyboard.CursorKeys;
+
+  /**
+   * Player move listeners
+   * @type {PlayerListener[]}
+   */
+  public playerListeners: PlayerListener[] = [];
 
   /**
    * Override create method
@@ -48,9 +48,13 @@ export class Player extends ImageObject {
     this.move(time);
   }
 
-  public setTilemap(tilemap: Phaser.Tilemaps.StaticTilemapLayer): Player {
-    this.tilemap = tilemap;
-    return this;
+  /**
+   * Add player listener
+   * @param {PlayerListener} listener Listener
+   * @return {void}
+   */
+  public addMoveListener(listener: PlayerListener): void {
+    this.playerListeners.push(listener);
   }
 
   /**
@@ -94,20 +98,10 @@ export class Player extends ImageObject {
     this.x = x;
     this.y = y;
 
-    // Create goal
-    const goal = new Player({
-      scene: this.scene,
-      x: 96,
-      y: 128
+    // Notify listeners
+    this.playerListeners.forEach((listener) => {
+      listener.onPlayerMove(this);
     });
-
-    const nodes = AStar
-      .create(this.scene, this.tilemap)
-      .from(this)
-      .to(goal)
-      .getPath();
-
-    console.log(nodes);
 
     return true;
   }

@@ -42,6 +42,12 @@ export class ImageObject extends Phaser.Physics.Arcade.Image {
   protected currentScene!: Phaser.Scene;
 
   /**
+   * Scene tilemap
+   * @type {Phaser.Tilemaps.StaticTilemapLayer}
+   */
+  protected tilemap!: Phaser.Tilemaps.StaticTilemapLayer;
+
+  /**
    * Object constructor
    * @param {ObjectConfig} params Object config
    */
@@ -63,6 +69,17 @@ export class ImageObject extends Phaser.Physics.Arcade.Image {
 
     // Call overrided method
     this.create();
+  }
+
+  /**
+   * Set tilemap
+   * @param {Phaser.Tilemaps.StaticTilemapLayer} tilemap Tilemap
+   * @return {Player} Current instance
+   */
+  public setTilemap<T>(tilemap: Phaser.Tilemaps.StaticTilemapLayer): T {
+    this.tilemap = tilemap;
+    // @ts-ignore
+    return this;
   }
 
   /**

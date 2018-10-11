@@ -1,6 +1,8 @@
 import { Player } from '@/objects/Player';
 import { DebugBlock } from '@/objects/DebugBlock';
 import { Bottleneck } from '@/algo/Bottleneck';
+import { Opponent } from '@/objects/Opponent';
+import { AStar } from '@/algo/AStar';
 
 /**
  * Sample Phaser scene
@@ -26,6 +28,7 @@ export class GameScene extends Phaser.Scene {
    */
   public preload(): void {
     this.load.image('player', 'assets/player.png');
+    this.load.image('opponent', 'assets/opponent.png');
     this.load.image('debug', 'assets/debug.png');
 
     this.load.image('tilesgrid', 'assets/tilesgrid.png');
@@ -89,6 +92,21 @@ export class GameScene extends Phaser.Scene {
       // @ts-ignore
       y: tilemapPlayerObject.y - 32
     }).setTilemap(this.ground);
+
+    const cpu1 = new Opponent({
+      scene: this,
+      x: 32,
+      y: 192
+    }).setTilemap<Opponent>(this.ground);
+
+    const cpu2 = new Opponent({
+      scene: this,
+      x: 224,
+      y: 128
+    }).setTilemap<Opponent>(this.ground);
+
+    this.player.addMoveListener(cpu1);
+    this.player.addMoveListener(cpu2);
   }
 
   /**

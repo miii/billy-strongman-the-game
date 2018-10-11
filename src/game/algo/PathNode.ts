@@ -16,9 +16,9 @@ export class PathNode {
 
   /**
    * Path cost to destination
-   * @type {Number}
+   * @type {number}
    */
-  public cost: Number;
+  public cost: number;
 
   /**
    * Previous path node

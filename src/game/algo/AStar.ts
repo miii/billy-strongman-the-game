@@ -54,8 +54,8 @@ export class AStar {
       return console.error('No to object given');
 
     // Dummy code
-    let pathNode: PathNode;
-    pathNode = this.pathTraverser();
+    let pathNode: PathNode[];
+    pathNode = this.getPath();
 
   }
 
@@ -80,7 +80,7 @@ export class AStar {
     return new PathNode(tile, index, cost, prevNode);
   }
 
-  private pathTraverser() {
+  private getPath() {
     const closedArray: PathNode[] = [];
     const openArray: PathNode[] = [];
     const playerPos = [this.fromObject.x, this.fromObject.y];
@@ -93,36 +93,41 @@ export class AStar {
     let currentNode = this.createPathNode(
       this.fromObject.x, this.fromObject.y, playerPositionCost, null
     );
-    console.log('Closed Array', closedArray);
     openArray.push(currentNode);
     do {
       if (!this.tilemap.getTileAtWorldXY(this.toObject.x, this.toObject.y))
         break;
       if (currentNode.cost === 0) {
-        console.log('Found the node', currentNode);
         break;
       }
       closedArray.push(currentNode);
-      openArray.splice(closedArray.findIndex(node => node === currentNode), 1);
-      const neighbourNodes: PathNode[] = this.checkNeighbours(currentNode);
+      openArray.splice(openArray.findIndex(node => node === currentNode), 1);
+      const neighbourNodes: PathNode[] = this.getNeighbours(currentNode);
       neighbourNodes.forEach((neighbourNode) => {
-        if (!closedArray.some(closedNode => closedNode.tile === neighbourNode.tile)) {
+        if (!closedArray.some(closedNode => closedNode.tile === neighbourNode.tile &&
+            !openArray.some(openNode => openNode.tile === neighbourNode.tile))) {
           openArray.push(neighbourNode);
         }
       });
-      let minNode: PathNode | undefined;
+      let minCostNode: PathNode | undefined = undefined;
       openArray.forEach((arrayNode) => {
-        if (minNode !== undefined)
-          minNode = arrayNode;
-        else if (minNode.cost > arrayNode.cost)
-          minNode = arrayNode;
+        if (minCostNode === undefined)
+          minCostNode = arrayNode;
+        else if (minCostNode.cost > arrayNode.cost)
+          minCostNode = arrayNode;
       });
-      if (minNode !== undefined)
-        currentNode = minNode;
-      console.log('Open array, ', openArray);
+      if (minCostNode !== undefined)
+        currentNode = minCostNode;
     } while (openArray.length > 0);
 
-    return currentNode;
+    const correctPath: PathNode[] = [];
+    do {
+      correctPath.unshift(currentNode);
+      if (currentNode.prevNode != null)
+        currentNode = currentNode.prevNode;
+    } while (currentNode.prevNode != null);
+
+    return correctPath;
   }
 
   private countCost(tile1: Phaser.Tilemaps.Tile, tile2: Phaser.Tilemaps.Tile) {
@@ -135,7 +140,12 @@ export class AStar {
     return optimalCost;
   }
 
-  private checkNeighbours(currentNode: PathNode): PathNode[] {
+  /**
+   * Get existing neighbour nodes
+   * @param {PathNode} currentNode Parent node
+   * @return {PathNode[]}
+   */
+  private getNeighbours(currentNode: PathNode): PathNode[] {
 
     const goalPosition = [this.toObject.x, this.toObject.y];
     let movementCost: number;
@@ -194,5 +204,9 @@ export class AStar {
       neighbourNodes.push(leftNeighbour);
     }
     return neighbourNodes;
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

@@ -1,10 +1,12 @@
 import { ImageObject } from '@/objects/base-classes/ImageObject';
 import { PathNode } from '@/algo/PathNode';
+import { DebugBlock } from '@/objects/DebugBlock';
 
 export class AStar {
   private tilemap!: Phaser.Tilemaps.StaticTilemapLayer;
   private fromObject!: ImageObject;
   private toObject!: ImageObject;
+  private static debugBlock: ImageObject[] = [];
 
   public constructor(tilemap: Phaser.Tilemaps.StaticTilemapLayer) {
     this.tilemap = tilemap;
@@ -73,7 +75,8 @@ export class AStar {
         this.tilemap.getTileAtWorldXY(playerPos[0], playerPos[1]),
         this.tilemap.getTileAtWorldXY(goalPosition[0], goalPosition[1]));
 
-    let currentNode = this.createPathNode(
+    console.log('Player pos cost ', playerPositionCost);
+    let currentNode: PathNode | null = this.createPathNode(
       this.fromObject.x, this.fromObject.y, playerPositionCost, null
     );
 
@@ -103,11 +106,13 @@ export class AStar {
     } while (openArray.length > 0);
 
     const correctPath: PathNode[] = [];
-    do {
+    AStar.debugBlock.forEach(block => block.destroy());
+    AStar.debugBlock = [];
+    while (currentNode.prevNode !== null) {
       correctPath.unshift(currentNode);
-      if (currentNode.prevNode != null)
-        currentNode = currentNode.prevNode;
-    } while (currentNode.prevNode != null);
+      AStar.debugBlock.push(DebugBlock.create(currentNode.tile.pixelX, currentNode.tile.pixelY));
+      currentNode = currentNode.prevNode;
+    }
 
     return correctPath;
   }

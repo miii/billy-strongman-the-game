@@ -1,6 +1,6 @@
 import { Player } from '@/objects/Player';
 import { DebugBlock } from '@/objects/DebugBlock';
-import { AStar } from '@/algo/AStar';
+import { Bottleneck } from '@/algo/Bottleneck';
 
 /**
  * Sample Phaser scene
@@ -50,23 +50,11 @@ export class GameScene extends Phaser.Scene {
     // Create player
     this.createPlayer(map);
 
-    // Create goal
-    const goal = new Player({
-      scene: this,
-      x: 96,
-      y: 128
-    });
-
-    // Run A* algorithm
-    AStar
-      .create(this, this.ground)
-      .from(this.player)
-      .to(goal)
-      .navigate();
-
     // Prevent player from walking on water
     water.setCollisionByProperty({ collides: true });
     this.physics.add.collider(this.player, water);
+
+    Bottleneck.setup(this.ground);
   }
 
   /**
@@ -100,7 +88,7 @@ export class GameScene extends Phaser.Scene {
       // left corner, hence the 32 pixel negative offset
       // @ts-ignore
       y: tilemapPlayerObject.y - 32
-    });
+    }).setTilemap(this.ground);
   }
 
   /**

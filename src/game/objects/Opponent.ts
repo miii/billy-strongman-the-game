@@ -24,7 +24,7 @@ export class Opponent extends ImageObject implements PlayerListener {
    * List of opponent allies
    * @type {Opponent[]}
    */
-  private static allies: Opponent[] = [];
+  public static allies: Opponent[] = [];
 
   /**
    * Override create method
@@ -49,12 +49,19 @@ export class Opponent extends ImageObject implements PlayerListener {
 
       // Move opponent to tile
       this.moveToTile(path[0].tile);
-
-      AStar.getPath(this, player, true);
-
     // If opponent is not the closest one to the player
     } else {
-      Bottleneck.find(this, player);
+      let bottleneck = Bottleneck.find(this, player);
+
+      // If any bottleneck tile was found near the opponent
+      if (bottleneck) {
+        // Find the next node to move to
+        while (bottleneck.prevNode !== null && bottleneck.prevNode.prevNode !== null)
+          bottleneck = bottleneck.prevNode;
+
+        // Move to neighbour tile
+        this.moveToTile(bottleneck.tile);
+      }
     }
   }
 

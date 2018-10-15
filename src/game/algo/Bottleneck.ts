@@ -2,6 +2,7 @@ import { PathNode } from '@/algo/PathNode';
 import { DebugBlock } from '@/objects/DebugBlock';
 import { ImageObject } from '@/objects/base-classes/ImageObject';
 import { AStar } from './AStar';
+import { Opponent } from '@/objects/Opponent';
 
 export class Bottleneck {
   /**
@@ -20,8 +21,9 @@ export class Bottleneck {
    * Find suitable bottleneck location
    * @param {ImageObject} opponent Opponent object
    * @param {ImageObject} player Player object
+   * @return {PathNode | undefined}
    */
-  public static find(opponent: ImageObject, player: ImageObject): PathNode[] {
+  public static find(opponent: ImageObject, player: ImageObject): PathNode | undefined {
     const closed: PathNode[] = [];
     const open: PathNode[] = [];
 
@@ -55,14 +57,80 @@ export class Bottleneck {
       // Add neighbour tiles to open array
       neighbours.forEach((neighbourNode) => {
         open.push(neighbourNode);
-        Bottleneck.debugBlocks.push(
-          DebugBlock.create(neighbourNode.tile.pixelX, neighbourNode.tile.pixelY)
-        );
       });
     }
 
-    // Return visited nodes
-    return open;
+    // Store bottleneck nodes
+    const bottleneckNodes: PathNode[] = [];
+    let currentNode: PathNode | null;
+
+    // Traverse through end nodes
+    open.forEach((node) => {
+      currentNode = node;
+
+      // While tile is a passage, go to previous node
+      while (currentNode !== null && this.getNeighbours(currentNode).length === 2)
+        currentNode = currentNode.prevNode;
+
+      // Mark as bottleneck node if tile exists
+      if (currentNode !== null)
+        bottleneckNodes.push(currentNode);
+    });
+
+    // Temporary variables
+    let bestNode: PathNode | undefined = undefined;
+    let debugTile: ImageObject;
+    let pathToPlayer: PathNode[];
+
+    // Traverse through each bottleneck node
+    bottleneckNodes.forEach((node) => {
+      // Create dummy tile to use with A* algorithm
+      debugTile = DebugBlock.create(node.tile.pixelX, node.tile.pixelY);
+
+      // Get A* path from bottleneck tile to player
+      pathToPlayer = AStar.getPath(debugTile, player);
+      node.cost = pathToPlayer.length;
+
+      // Destroy debug tile
+      debugTile.destroy();
+
+      // Add node directly if first iteration
+      if (!bestNode) {
+        bestNode = node;
+        return;
+      }
+
+      // Find other opponents along the path between the bottleneck tile and the player
+      // If someone is found, we know that the player cannot move here and therefore ignore it
+      for (let i = 0; i < pathToPlayer.length; i++)
+        for (let j = 0; j < Opponent.allies.length; j++)
+          if (
+            pathToPlayer[i].tile.pixelX === Opponent.allies[j].x &&
+            pathToPlayer[i].tile.pixelY === Opponent.allies[j].y
+          )
+            return;
+
+      /*
+      Bottleneck.debugBlocks.push(
+        DebugBlock.create(node.tile.pixelX, node.tile.pixelY)
+      );
+      */
+
+      // Replace node if cost is better
+      if (node.cost < bestNode.cost) {
+        bestNode = node;
+      }
+    });
+
+    /*
+    if (bestNode !== undefined)
+      Bottleneck.debugBlocks.push(
+        // @ts-ignore
+        DebugBlock.create(bestNode.tile.pixelX, bestNode.tile.pixelY)
+      );
+    */
+
+    return bestNode;
   }
 
   /**

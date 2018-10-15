@@ -95,8 +95,10 @@ export class AStar {
       currentNode = currentNode.prevNode;
 
       // Add debug block
+      /*
       if (debug)
         AStar.debugBlocks.push(DebugBlock.create(currentNode.tile.pixelX, currentNode.tile.pixelY));
+      */
     }
 
     // Return nodes in ascending order

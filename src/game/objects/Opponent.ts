@@ -24,7 +24,7 @@ export class Opponent extends ImageObject implements PlayerListener {
    * List of opponent allies
    * @type {Opponent[]}
    */
-  private static allies: Opponent[] = [];
+  public static allies: Opponent[] = [];
 
   /**
    * Override create method
@@ -40,6 +40,10 @@ export class Opponent extends ImageObject implements PlayerListener {
    * @return {void}
    */
   public onPlayerMove(player: Player): void {
+    // Check collision with player before move
+    if (this.checkCollision(player))
+      return;
+
     const closestOpponent = this.closestOpponent(player);
 
     // If opponent is the closest one to the player
@@ -56,6 +60,9 @@ export class Opponent extends ImageObject implements PlayerListener {
     } else {
       Bottleneck.find(this, player);
     }
+
+    // Check collision with player after move
+    this.checkCollision(player);
   }
 
   /**
@@ -90,5 +97,23 @@ export class Opponent extends ImageObject implements PlayerListener {
   private moveToTile(tile: Phaser.Tilemaps.Tile): void {
     this.x = tile.pixelX;
     this.y = tile.pixelY;
+  }
+
+  /**
+   * Check collision with player
+   * @param {Player} player Player object
+   * @return {boolean}
+   */
+  private checkCollision(player: Player): boolean {
+    // Check collision with player
+    if (this.x === player.x && this.y === player.y) {
+      // Add delay to prevent bug were player is moved after scene restart
+      if (this.scene)
+        this.scene.events.emit('game_over');
+
+      return true;
+    }
+
+    return false;
   }
 }

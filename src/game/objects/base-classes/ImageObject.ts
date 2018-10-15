@@ -67,6 +67,9 @@ export class ImageObject extends Phaser.Physics.Arcade.Image {
     // Set origin to top left corner
     this.setOrigin(0, 0);
 
+    // Destroy object on game over
+    this.currentScene.events.on('game_over', () => { this.destroy(); });
+
     // Call overrided method
     this.create();
   }

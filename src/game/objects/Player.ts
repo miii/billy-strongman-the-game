@@ -70,7 +70,7 @@ export class Player extends ImageObject {
     if (time < this.nextMoveTime)
       return;
 
-    // Next move can be done in 50 ms
+    // Next move can be done in 100 ms
     this.nextMoveTime = time + 100;
 
     // Check cursor keys and move player

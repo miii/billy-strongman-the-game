@@ -1,4 +1,4 @@
-# Billy Strongman
+# Billy Strongman - The Game
 <img src="https://david-dm.org/miii/oliveai.svg"> <img src="https://img.shields.io/david/dev/miii/oliveai.svg"><br>
 Control Billy Strongman to collect protein powder without getting catched.<br>
 Build using Phaser 3, Webpack, Babel, Typescript & Tiled.<br>

@@ -17,7 +17,7 @@ export class Powder extends ImageObject implements PlayerListener {
    * Player score
    * @type {number}
    */
-  private static points: number = 0;
+  public static score: number = 0;
 
   /**
    * If powder has been taken
@@ -30,7 +30,10 @@ export class Powder extends ImageObject implements PlayerListener {
    * @return {void}
    */
   public create(): void {
-    Powder.points = 0;
+    Powder.score = 0;
+
+    // @ts-ignore
+    document.getElementById('score').innerHTML = Powder.score;
   }
 
   /**
@@ -39,12 +42,18 @@ export class Powder extends ImageObject implements PlayerListener {
    * @return {void}
    */
   public onPlayerMove(player: Player): void {
+    // @ts-ignore
+    if (this.currentScene.gameOver)
+      return;
+
+    // Check if powder was catched
     if (!this.taken && this.x === player.x && this.y === player.y) {
-      Powder.points++;
+      Powder.score++;
       this.destroy();
       this.taken = true;
 
-      console.log('New score:', Powder.points);
+      // @ts-ignore
+      document.getElementById('score').innerHTML = Powder.score;
     }
   }
 }

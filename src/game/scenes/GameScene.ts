@@ -23,6 +23,12 @@ export class GameScene extends Phaser.Scene {
   private ground!: Phaser.Tilemaps.StaticTilemapLayer;
 
   /**
+   * If player was defeated
+   * @type {boolean}
+   */
+  private gameOver: boolean = false;
+
+  /**
    * Setup scene
    * @param {GameConfig} config Phaser game config
    */
@@ -60,25 +66,26 @@ export class GameScene extends Phaser.Scene {
     // Make tilemap
     const map = this.make.tilemap({ key: 'map' });
     const tiles = map.addTilesetImage('tileset', 'tilesgrid');
-    const water = map.createStaticLayer('water', tiles, 0, 0);
+    map.createStaticLayer('water', tiles, 0, 0);
     this.ground = map.createStaticLayer('ground', tiles, 0, 0);
 
     // Create player
     this.createPlayer(map);
 
     // Create powder on map
-    this.createPowder(map);
+    const powder = this.createPowder(map);
 
     // Create opponents
     this.createOpponents(map);
 
-    // Prevent player from walking on water
-    water.setCollisionByProperty({ collides: true });
-    this.physics.add.collider(this.player, water);
+    // Add move listener on powder (after opponents)
+    powder.forEach(p => this.player.addMoveListener(p));
 
     AStar.tilemap = this.ground;
     Bottleneck.tilemap = this.ground;
 
+    // Set game over flag
+    this.gameOver = false;
     this.events.on('game_over', () => { this.onGameOver(); });
   }
 
@@ -128,6 +135,7 @@ export class GameScene extends Phaser.Scene {
 
   /**
    * Create player in scene
+   * @param {Phaser.Tilemaps.Tilemap} map Tilemap
    * @return {void}
    */
   private createOpponents(map: Phaser.Tilemaps.Tilemap): void {
@@ -166,7 +174,12 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private createPowder(map: Phaser.Tilemaps.Tilemap): void {
+  /**
+   * Create opponents in scene
+   * @param {Phaser.Tilemaps.Tilemap} map Tilemap
+   * @return {Powder[]}
+   */
+  private createPowder(map: Phaser.Tilemaps.Tilemap): Powder[] {
     // Get player object layer from tilemap
     const charactersLayer = map.layers
       .find(layer => layer.name === 'powder') as Phaser.Tilemaps.LayerData;
@@ -181,29 +194,46 @@ export class GameScene extends Phaser.Scene {
       });
     });
 
+    const powder: Powder[] = [];
+
     // Add opponents
     powderTiles.forEach((tile) => {
       // Create opponent
-      const powder = new Powder({
+      const p = new Powder({
         scene: this,
         x: tile.pixelX,
         y: tile.pixelY
       }).setTilemap<Powder>(this.ground);
 
-      // Listen to player moves
-      this.player.addMoveListener(powder);
+      powder.push(p);
     });
+
+    // Return powder objects
+    return powder;
   }
 
   /**
    * On game over
+   * @return {void}
    */
-  private onGameOver() {
+  private onGameOver(): void {
+    // Set game over flag
+    this.gameOver = true;
+
+    // Add timeout to prevent input bugs
     setTimeout(
       () => {
         this.scene.restart();
       },
       150
     );
+
+    // @ts-ignore
+    const highscore = parseInt(document.getElementById('highscore').innerHTML, 10);
+
+    // If new highscore was achieved
+    if (Powder.score > highscore)
+      // @ts-ignore
+      document.getElementById('highscore').innerHTML = Powder.score;
   }
 }

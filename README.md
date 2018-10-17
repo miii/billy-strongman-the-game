@@ -1,5 +1,8 @@
-# Phaser skeleton
-Build a Phaser 3 game using Webpack, Babel & Typescript.
+# Billy Strongman - The Game
+<img src="https://david-dm.org/miii/oliveai.svg"> <img src="https://img.shields.io/david/dev/miii/oliveai.svg"><br>
+Control Billy Strongman to collect protein powder without getting catched.<br>
+Build using Phaser 3, Webpack, Babel, Typescript & Tiled.<br>
+Developed for the course TNM095 (Artificial Intelligence for Interactive Media) at Linköping University.
 
 <img src="https://phaser.io/images/img.png" height="100"> <img src="https://raw.githubusercontent.com/webpack/media/master/logo/logo-on-white-bg.png" height="100"> <img src="https://rynop.files.wordpress.com/2016/09/ts.png?w=816" height="100">
 
@@ -29,6 +32,7 @@ Dependency | Purpose
 @babel/core | Babel core library
 @babel/preset-env | Add support for next generation of javascript
 @babel/preset-typescript | Add Typescript support
+@babel/polyfill | Add Promise support and more
 babel-loader | Use Babel with Webpack
 babel-plugin-transform-class-properties | Add support for class properties
 clean-webpack-plugin | Clear dist folder on build

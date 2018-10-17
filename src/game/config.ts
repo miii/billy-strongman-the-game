@@ -7,8 +7,8 @@ export const phaserConfig: GameConfig = {
   parent: 'app',
   type: Phaser.AUTO,
   scene: [GameScene],
-  width: 320,
-  height: 320,
+  width: 640,
+  height: 640,
 
   // Sample config items
   physics: {

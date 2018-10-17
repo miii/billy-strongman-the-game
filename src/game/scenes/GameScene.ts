@@ -51,7 +51,7 @@ export class GameScene extends Phaser.Scene {
     this.load.image('debug', 'assets/tiled/blocks/debug.png');
 
     this.load.image('tilesgrid', 'assets/tiled/tilesgrid.png');
-    this.load.tilemapTiledJSON('map', 'assets/tiled/tilemap.json');
+    this.load.tilemapTiledJSON('map', 'assets/tiled/levels/1/tilemap.json');
 
     // Set debugger scene
     DebugBlock.scene = this;
@@ -167,7 +167,10 @@ export class GameScene extends Phaser.Scene {
         scene: this,
         x: opponentTile.pixelX,
         y: opponentTile.pixelY
-      }).setTilemap<Opponent>(this.ground);
+      })
+      .setTilemap<Opponent>(this.ground)
+      .setOrigin(-0.2, -0.2)
+      .setScale(0.7);
 
       // Listen to player moves
       this.player.addMoveListener(cpu);
